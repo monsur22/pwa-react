@@ -1,47 +1,44 @@
-const CACHE_NAME = "version-1"
-const urlsToCache = ['index.html', 'offline.html'];
+const CACHE_NAME = "version-1";
+const urlsToCache = [ 'index.html', 'offline.html' ];
+
 const self = this;
 
-// install sw
-self.addEventListener('install', function(event) {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function(cache) {
-          console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-  );
+// Install SW
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                console.log('Opened cache');
+
+                return cache.addAll(urlsToCache);
+            })
+    )
 });
 
-// listem for requests
-
-self.addEventListener('fetch', function(event) {
+// Listen for requests
+self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request)
-        .then(function(response) {
-            // Cache hit - return response
-            if (response) {
-            return response;
-            }
-            return fetch(event.request)
-                .catch(() => caches.match('ofline.html'))
-        }
-        )
-    );
-})
+            .then(() => {
+                return fetch(event.request)
+                    .catch(() => caches.match('offline.html'))
+            })
+    )
+});
 
-// aCaching strategy
+// Activate the SW
+self.addEventListener('activate', (event) => {
+    const cacheWhitelist = [];
+    cacheWhitelist.push(CACHE_NAME);
 
-self.addEventListener('fetch', function(event) {
-    const cacheWhiteList = ['index.html', 'offline.html'];
-    cacheWhiteList.push(CACHE_NAME);
-    event.respondWith(
+    event.waitUntil(
         caches.keys().then((cacheNames) => Promise.all(
             cacheNames.map((cacheName) => {
-                if (!cacheWhiteList.includes(cacheName)) {
+                if(!cacheWhitelist.includes(cacheName)) {
                     return caches.delete(cacheName);
                 }
             })
-            ))
+        ))
+
     )
-})
+});
